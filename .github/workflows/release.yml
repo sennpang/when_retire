@@ -1,0 +1,61 @@
+name: Build Android .apk
+
+run-name: "Building the .apk with the tag triggered by @${{ github.actor }}"
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  install-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install npm dependencies
+        run: |
+          npm install
+  build-android:
+    needs: install-and-test
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+
+      - name: Install npm dependencies
+        run: |
+          npm install
+
+      - name: Goto android folder 
+        run: |
+          cd android
+
+      - name: Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.ANDROID_KEY_STORE_BASE64 }}
+          ANDROID_KEY_STORE_FILE: ${{ secrets.ANDROID_KEY_STORE_FILE }}
+ 
+        run: |
+          cd android 
+          echo $ENCODED_STRING > keystore-b64.txt
+          base64 -d keystore-b64.txt > $ANDROID_KEY_STORE_FILE
+           
+      - name: Build Release apk
+        env:
+           ANDROID_KEY_STORE_FILE: ${{ secrets.ANDROID_KEY_STORE_FILE }}
+           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+           ANDROID_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+        run: |
+          cd android 
+          mv $ANDROID_KEY_STORE_FILE app/
+          ./gradlew assembleRelease
+
+      - name: Create Release and Uploading Files
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk

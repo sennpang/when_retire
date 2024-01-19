@@ -1,118 +1,67 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { Alert, SafeAreaView, ScrollView, ViewStyle, useColorScheme } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { Button, HelperText, IconButton, List, MD3Colors, PaperProvider, Text, TextInput } from 'react-native-paper';
+import { RealmProvider } from '@realm/react';
+import { Person } from './src/model/Person';
+import { isValidIdCardNo } from './src/helper/idcard';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const [cardNo, setIdCardNo] = React.useState("");
 
-  const backgroundStyle = {
+  const backgroundStyle: ViewStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    padding: 10
   };
 
+  const handleAddCard = () => {
+    if (!cardNo || !isValidIdCardNo(cardNo)) {
+      Alert.alert('错误的身份证号')
+      return
+    }
+  }
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <RealmProvider schema={[Person]}>
+      <PaperProvider>
+        <SafeAreaView style={backgroundStyle}>
+          <ScrollView
+            contentInsetAdjustmentBehavior="automatic"
+            style={backgroundStyle}>
+
+            <TextInput
+              label="身份证号"
+              placeholder='请输入身份证号'
+              style={{ marginBottom: 10 }}
+              value={cardNo}
+              keyboardType="phone-pad"
+              onChangeText={text => setIdCardNo(text)}
+            />
+
+            <Button style={{ marginTop: 10, }} icon="plus" mode="outlined" onPress={handleAddCard}>
+              添加
+            </Button>
+            <Text variant="titleMedium" style={{ marginTop: 10, marginBottom: 10, fontWeight: 'bold' }}>已添加的信息</Text>
+            <List.Section>
+              <List.Item
+                right={props =>
+                  <IconButton
+                    icon="information-outline"
+                    iconColor={MD3Colors.secondary50}
+                    size={20}
+                    onPress={() => console.log('Pressed')}
+                  />}
+                style={{ paddingRight: 0 }}
+                contentStyle={{ paddingLeft: 0, paddingRight: 0 }}
+                title="First item" />
+              <List.Item title="Second item" />
+            </List.Section>
+          </ScrollView>
+        </SafeAreaView>
+      </PaperProvider>
+    </RealmProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
 export default App;
